@@ -166,6 +166,85 @@ for response in response_stream:
     print(response.choices[0].delta.content or "", end="", flush=True)
 ```
 
+`Chat Completions with Images`
+
+The worker supports image inputs following the OpenAI vision API format. You can include images in your messages using URLs or base64 encoded data:
+
+```python
+# Using image URLs
+response = client.chat.completions.create(
+    model="Qwen/Qwen2.5-VL-7B-Instruct",
+    messages=[{
+        "role": "user",
+        "content": [
+            {"type": "text", "text": "What's in this image?"},
+            {
+                "type": "image_url",
+                "image_url": {
+                    "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg"
+                }
+            }
+        ]
+    }],
+    max_tokens=100
+)
+print(response.choices[0].message.content)
+```
+
+```python
+# Using base64 encoded images
+import base64
+
+# Read and encode your image
+with open("image.jpg", "rb") as image_file:
+    encoded_image = base64.b64encode(image_file.read()).decode('utf-8')
+
+response = client.chat.completions.create(
+    model="Qwen/Qwen2.5-VL-7B-Instruct",
+    messages=[{
+        "role": "user",
+        "content": [
+            {"type": "text", "text": "Describe this image:"},
+            {
+                "type": "image_url",
+                "image_url": {
+                    "url": f"data:image/jpeg;base64,{encoded_image}"
+                }
+            }
+        ]
+    }],
+    max_tokens=100
+)
+print(response.choices[0].message.content)
+```
+
+You can also use the direct API format:
+
+```json
+{
+  "input": {
+    "openai_route": "/v1/chat/completions",
+    "openai_input": {
+      "model": "Qwen/Qwen2.5-VL-7B-Instruct",
+      "messages": [
+        {
+          "role": "user",
+          "content": [
+            {"type": "text", "text": "What's in this image?"},
+            {
+              "type": "image_url",
+              "image_url": {
+                "url": "https://example.com/image.jpg"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
+```
+
 ### Standard RunPod Calls
 
 If you prefer to call the SGLang _native_ endpoint (what the handler sends when no OpenAI-style keys are detected) wrap the body under the `input` key as usual:
